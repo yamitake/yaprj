@@ -1,0 +1,67 @@
+<html>
+  <head>
+    <script>
+      (function() {
+        var gen_uuid;
+
+        gen_uuid = function() {
+          var d;
+          d = (new Date).getTime();
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r;
+            r = (d + Math.random() * 16) % 16 | 0;
+            d = Math.floor(d / 16);
+            return (c === 'x' ? r : r & 0x3 | 0x8).toString(16);
+          });
+        };
+
+        window.addEventListener('message', function(event) {
+          var uuid;
+          if (event.data === 'getUUID') {
+            try {
+              uuid = localStorage.getItem('uuid');
+            } catch (e) {
+              // safariのブラウザ仕様で、localStorageの呼び出しを拒絶された時に
+              // 後続処理が止まらないように try catch で対応
+            }
+
+            if (uuid == null) {
+              uuid = gen_uuid();
+              try {
+                localStorage.setItem('uuid', uuid);
+              } catch (e) {
+                // safariのブラウザ仕様で、localStorageの呼び出しを拒絶された時に
+                // 後続処理が止まらないように try catch で対応
+              }
+            }
+            return event.source.postMessage(uuid, event.origin);
+          }
+
+          var responce;
+          if(event.data.message === 'current_uuid') {
+            try {
+              uuid = localStorage.getItem('uuid');
+              if (event.data.is_generate_uuid && uuid == null) {
+                uuid = gen_uuid();
+                try {
+                    localStorage.setItem('uuid', uuid);
+                } catch (e) {
+                    // safariのブラウザ仕様で、localStorageの呼び出しを拒絶された時に
+                    // 後続処理が止まらないように try catch で対応
+                }
+              }
+              responce = {message: 'current_uuid', current_uuid: uuid};
+            } catch (e) {
+              // safariのブラウザ仕様で、localStorageの呼び出しを拒絶された時に
+              // 後続処理が止まらないように try catch で対応
+            }
+            return event.source.postMessage(responce, event.origin);
+          }
+
+        }, false);
+
+      }).call(this);
+    </script>
+  </head>
+</html>
+
